@@ -191,8 +191,9 @@ if __name__ == '__main__':
         loss_function = MaskedNLLLoss()
 
     optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.l2)
-    
-    lf = open('logs/cosmic_iemocap_logs.txt', 'a')
+    save_log_file="logs/cosmic_iemocap_logs.txt"
+
+
 
     train_loader, valid_loader, test_loader = get_IEMOCAP_loaders(batch_size=batch_size,
                                                                   num_workers=0)
@@ -219,7 +220,8 @@ if __name__ == '__main__':
         x = 'epoch: {}, train_loss: {}, acc: {}, fscore: {}, valid_loss: {}, acc: {}, fscore: {}, test_loss: {}, acc: {}, fscore: {}, time: {} sec'.format(e+1, train_loss, train_acc, train_fscore, valid_loss, valid_acc, valid_fscore, test_loss, test_acc, test_fscore, round(time.time()-start_time, 2))
         
         print (x)
-        lf.write(x + '\n')
+        with open(save_log_file, 'a') as lf:
+            lf.write(x + '\n')
                
     if args.tensorboard:
         writer.close()
