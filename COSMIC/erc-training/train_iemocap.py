@@ -1,4 +1,7 @@
+import sys,os
 import numpy as np, argparse, time, pickle, random
+
+from numpy.core.arrayprint import printoptions
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -8,7 +11,9 @@ from dataloader import IEMOCAPRobertaCometDataset
 from model import MaskedNLLLoss
 from commonsense_model import CommonsenseGRUModel
 from sklearn.metrics import f1_score, accuracy_score
+import json
 
+os.environ["CUDA_VISIBLE_DEVICES"] ="1,0"
 def seed_everything(seed):
     random.seed(seed)
     np.random.seed(seed)
@@ -104,12 +109,14 @@ def train_or_eval_model(model, loss_function, dataloader, epoch, optimizer=None,
     
     return avg_loss, avg_accuracy, labels, preds, masks, [avg_fscore], [alphas, alphas_f, alphas_b, vids]
 
-
+    
 if __name__ == '__main__':
 
+ 
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--no-cuda', action='store_true', default=False, help='does not use GPU')
+    parser.add_argument('--model_parameters',default="", type=str)
     parser.add_argument('--lr', type=float, default=0.0001, metavar='LR', help='learning rate')
     parser.add_argument('--l2', type=float, default=0.0003, metavar='L2', help='L2 regularization weight')
     parser.add_argument('--rec-dropout', type=float, default=0.1, metavar='rec_dropout', help='rec_dropout rate')
@@ -145,15 +152,20 @@ if __name__ == '__main__':
     batch_size = args.batch_size
 
     global  D_s
-
-    D_m = 1024
+    if  args.model_parameters!="":
+        params=args.model_parameters.split(",")
+        args.batch_size,D_g=[int(item) for item in params[:-1]]
+        args.lr=float(params[-1])
+    else:
+        D_g = 150
     D_s = 768
-    D_g = 150
-    D_p = 150
-    D_r = 150
-    D_i = 150
-    D_h = 100
-    D_a = 100
+    D_m = 1024
+
+    D_p = D_g
+    D_r = D_g
+    D_i = D_g
+    D_h = D_g
+    D_a = D_g
 
     D_e = D_p + D_r + D_i
 
@@ -238,7 +250,10 @@ if __name__ == '__main__':
     print('@Best Valid Loss: {}'.format(score1))
     print('@Best Valid F1: {}'.format(score2))
 
-    rf = open('results/cosmic_iemocap_results.txt', 'a')
-    rf.write('\t'.join(scores) + '\t' + str(args) + '\n')
-    rf.close()
+    with open("results/cosmic_iemocap_results.txt", 'a') as rf:
+        rf.write('\t'.join(scores) + '\t' + str(args) + '\n')
+
+    save_log=[{"best_vaild_loss":score1, "best_valid_F1":score2,"hyperparameters":args.model_parameters}]
+    with open('results/cosmic_iemocap_results.json',"a",encoding="utf-8") as f:
+        json.dump(save_log,f)
     

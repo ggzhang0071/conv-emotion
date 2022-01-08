@@ -14,7 +14,7 @@ docker exec -it conv_emotion   /bin/bash
 
 cd  conv-emotion
 
-pip install -r requirements.txt
+pip install -r COSMIC/requirements.txt
 #docker images |grep pytorch  | grep  "19"
 
 #pip list  |grep "pytorch"
