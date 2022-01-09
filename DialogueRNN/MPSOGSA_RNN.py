@@ -10,7 +10,7 @@ import sys
 #from pyts.image import RecurrencePlot
 import matplotlib.pyplot as plt
 import argparse  
-#import SaveDataCsv as SV
+
 def euclid_dist(x,y):
     temp = 0   
     for i,j in zip(x,y):
@@ -18,17 +18,16 @@ def euclid_dist(x,y):
         final = np.sqrt(temp)
     return final
 def MPSOGSA(dataset,max_iters,num_particles,NumSave,lr,resume,savepath):
+    os.makedirs(savepath,exist_ok=True)
     np.seterr(divide='ignore', invalid='ignore')
     # %config InlineBackend.figure_format = 'retina'
     c1 = 2
     c2 = 2
     g0 = 1
-    dim =3
-    w1=2;                 
+    w1=2;     
     wMax=0.9            
     wMin=0.5              
     current_fitness = np.zeros((num_particles,1))
-    gbest = np.zeros((1,dim))
     gbest_score = float('inf')
     OldBest=float('inf')
 
@@ -41,7 +40,9 @@ def MPSOGSA(dataset,max_iters,num_particles,NumSave,lr,resume,savepath):
 
     #all particle initialized
     particles = []
-    Max=[20,200]
+    Max=[700,400,300]
+    dim =len(Max)+1
+    gbest = np.zeros((1,dim))
     for i in range(num_particles):
         p = Particle()
         params=[]
@@ -76,11 +77,11 @@ def MPSOGSA(dataset,max_iters,num_particles,NumSave,lr,resume,savepath):
                 p.params[-1]=np.random.uniform(1e-5,0.01)
   
             string_pparams = [str(int) for int in p.params]
-            bashCommand = "python train_iemocap.py --active-listener"+" --model_parameters " +",".join(string_pparams)
+            bashCommand = "python train_IEMOCAP.py  --batch-size 1024 " + " --model_parameters " +",".join(string_pparams)
             os.system(bashCommand)
-            with open("results/cosmic_iemocap_results.json","r") as fid:
+            with open("results/dialoguernn_iemocap_results.json","r") as fid:
                 results_info=json.load(fid)
-            fitness=results_info[0]["best_vaild_loss"]
+            fitness=results_info[0]["best_loss"]
             
     #         fitness = fitness/X.shape[0]
             OldFitness=fitness
@@ -136,7 +137,7 @@ def MPSOGSA(dataset,max_iters,num_particles,NumSave,lr,resume,savepath):
 
         # velocity
         for p in particles:
-            p.velocity = w1*p.velocity+rnd.rand()*p.acceleration+rnd.rand()*(gbest - p.params)
+            p.velocity = w1*p.velocity+rnd.rand()*p.acceleration+rnd.rand()*(gbest-p.params)
 
         # position
         for p in particles:
@@ -155,9 +156,12 @@ def MPSOGSA(dataset,max_iters,num_particles,NumSave,lr,resume,savepath):
     sys.stdout.flush()
         # save results 
     FileName=dataset+'_BestParameters.csv'
-    newdata=[max_iters,num_particles,p.params,convergence]
+    #newdata=[{"max_iters":max_iters},{"num_particles":num_particles},{"parameters":p.params},{"convergence":convergence}]
+    newdata=[{"max_iters":max_iters},{"num_particles":num_particles}]
+
     PathFileName=os.path.join(savepath,FileName)
-    SV.SaveDataCsv(PathFileName,newdata)
+    with open(PathFileName,"w") as fid:
+        json.dump(newdata,fid)
 
 
 parser = argparse.ArgumentParser(description='PyTorch Time series forecasting')
@@ -174,7 +178,7 @@ parser.add_argument('--NumSave', type=int, default=8, help='Number to save')
 
 parser.add_argument('--resume', '-r', action='store_true', default=False, help='resume from checkpoint')
 
-parser.add_argument('--savepath', type=str, required=False, default='./Results/',
+parser.add_argument('--savepath', type=str, required=False, default='./results/',
                     help='Path to save results')
 
 args = parser.parse_args()
