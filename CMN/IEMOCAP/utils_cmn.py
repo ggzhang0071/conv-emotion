@@ -3,16 +3,16 @@ import pandas as pd
 import pickle
 from sklearn import model_selection, metrics
 
-TEXT_EMBEDDINGS = "./IEMOCAP/data/text/IEMOCAP_text_embeddings.pickle"
-VIDEO_EMBEDDINGS = "./IEMOCAP/data/video/IEMOCAP_video_features.pickle"
-AUDIO_EMBEDDINGS = "./IEMOCAP/data/audio/IEMOCAP_audio_features.pickle"
+TEXT_EMBEDDINGS = "/git/conv-emotion/ICON/IEMOCAP/data/text/IEMOCAP_text_embeddings.pickle"
+VIDEO_EMBEDDINGS = "/git/conv-emotion/ICON/IEMOCAP/data/video/IEMOCAP_video_features.pickle"
+AUDIO_EMBEDDINGS = "/git/conv-emotion/ICON/IEMOCAP/data/audio/IEMOCAP_audio_features.pickle"
 
-trainID = pickle.load(open("./IEMOCAP/data/trainID.pkl",'rb'), encoding="latin1")
-testID = pickle.load(open("./IEMOCAP/data/testID.pkl",'rb'), encoding="latin1")
+trainID = pickle.load(open("/git/conv-emotion/ICON/IEMOCAP/data/trainID.pkl",'rb'), encoding="latin1")
+testID = pickle.load(open("/git/conv-emotion/ICON/IEMOCAP/data/testID.pkl",'rb'), encoding="latin1")
 valID,_ = model_selection.train_test_split(testID, test_size=.4, random_state=1227)
 # valID = testID
 
-transcripts, labels, own_historyID, other_historyID, own_historyID_rank, other_historyID_rank = pickle.load(open("./IEMOCAP/data/dataset.pkl",'rb'), encoding="latin1")
+transcripts, labels, own_historyID, other_historyID, own_historyID_rank, other_historyID_rank = pickle.load(open("/git/conv-emotion/ICON/IEMOCAP/data/dataset.pkl",'rb'), encoding="latin1")
 label_idx = {'hap':0, 'sad':1, 'neu':2, 'ang':3, 'exc':4, 'fru':5}
 
 def oneHot(trainLabels, valLabels, testLabels):
