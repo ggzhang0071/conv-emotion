@@ -154,7 +154,7 @@ if __name__ == '__main__':
     global  D_s
     if  args.model_parameters!="":
         params=args.model_parameters.split(",")
-        args.batch_size,D_g=[int(item) for item in params[:-1]]
+        args.batch_size,D_g=[int(float(item)) for item in params[:-1]]
         args.lr=float(params[-1])
     else:
         D_g = 150
@@ -254,6 +254,6 @@ if __name__ == '__main__':
         rf.write('\t'.join(scores) + '\t' + str(args) + '\n')
 
     save_log=[{"best_vaild_loss":score1, "best_valid_F1":score2,"hyperparameters":args.model_parameters}]
-    with open('results/cosmic_iemocap_results.json',"a",encoding="utf-8") as f:
+    with open('results/cosmic_iemocap_results.json',"w",encoding="utf-8") as f:
         json.dump(save_log,f)
     

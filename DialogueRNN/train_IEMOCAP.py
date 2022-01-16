@@ -9,13 +9,15 @@ import torch.optim as optim
 
 import argparse
 import time
-import pickle
+import pickle,json
 
 from sklearn.metrics import f1_score, confusion_matrix, accuracy_score,\
                         classification_report, precision_recall_fscore_support
 
 from model import BiModel, Model, MaskedNLLLoss
 from dataloader import IEMOCAPDataset
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] ="1,0"
 
 def get_train_valid_sampler(trainset, valid=0.1):
     size = len(trainset)
@@ -106,6 +108,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='does not use GPU')
+    parser.add_argument('--model_parameters',default="", type=str)
+
     parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',
                         help='learning rate')
     parser.add_argument('--l2', type=float, default=0.00001, metavar='L2',
@@ -144,20 +148,26 @@ if __name__ == '__main__':
     cuda       = args.cuda
     n_epochs   = args.epochs
 
+    if  args.model_parameters!="":
+        params=args.model_parameters.split(",")
+        D_g,D_e,D_a=[int(float(item)) for item in params[:-1]]
+        D_p=D_g
+        D_h=D_e
+        args.lr=float(params[-1])
+    else:
+        D_g = 500
+        D_p = 500
+        D_e = 300
+        D_h = 300
+        D_a = 100 # concat attention
     D_m = 100
-    D_g = 500
-    D_p = 500
-    D_e = 300
-    D_h = 300
-
-    D_a = 100 # concat attention
-
     model = BiModel(D_m, D_g, D_p, D_e, D_h,
                     n_classes=n_classes,
                     listener_state=args.active_listener,
                     context_attention=args.attention,
                     dropout_rec=args.rec_dropout,
                     dropout=args.dropout)
+
     if cuda:
         model.cuda()
     loss_weights = torch.FloatTensor([
@@ -177,7 +187,7 @@ if __name__ == '__main__':
                            weight_decay=args.l2)
 
     train_loader, valid_loader, test_loader =\
-            get_IEMOCAP_loaders('/git/conv-emotion/DialogueRNN_features/IEMOCAP_features/IEMOCAP_features_raw.pkl',
+    get_IEMOCAP_loaders('./DialogueRNN_features/IEMOCAP_features/IEMOCAP_features_raw.pkl',
                                 valid=0.0,
                                 batch_size=batch_size,
                                 num_workers=2)
@@ -203,11 +213,18 @@ if __name__ == '__main__':
                         test_loss, test_acc, test_fscore, round(time.time()-start_time,2)))
     if args.tensorboard:
         writer.close()
-
+    best_acc=round(accuracy_score(best_label,best_pred,sample_weight=best_mask)*100,2)
     print('Test performance..')
-    print('Loss {} accuracy {}'.format(best_loss,
-                                     round(accuracy_score(best_label,best_pred,sample_weight=best_mask)*100,2)))
+    print('Loss {} accuracy {}'.format(best_loss,best_acc))
     print(classification_report(best_label,best_pred,sample_weight=best_mask,digits=4))
     print(confusion_matrix(best_label,best_pred,sample_weight=best_mask))
     # with open('best_attention.p','wb') as f:
     #     pickle.dump(best_attn+[best_label,best_pred,best_mask],f)
+    save_results=[{"best_loss":best_loss}, {"accuracy":best_acc},{"hyperparameters":args.model_parameters}]
+
+    with open("results/dialoguernn_iemocap_results.txt", 'a') as rf:
+        rf.write("best_loss:{}, best_acc:{}, parameter:{}".format(best_loss,best_acc,args))
+        rf.write("\r\n")
+
+    with open('results/dialoguernn_iemocap_results.json',"w",encoding="utf-8") as f:
+        json.dump(save_results,f)
