@@ -12,6 +12,8 @@ from model import MaskedNLLLoss
 from commonsense_model import CommonsenseGRUModel
 from sklearn.metrics import f1_score, accuracy_score
 import json
+from torchsampler import ImbalancedDatasetSampler
+
 
 os.environ["CUDA_VISIBLE_DEVICES"] ="1,0"
 def seed_everything(seed):
@@ -31,6 +33,7 @@ def get_IEMOCAP_loaders(batch_size=32, num_workers=0, pin_memory=False):
     train_loader = DataLoader(trainset,
                               batch_size=batch_size,
                               collate_fn=trainset.collate_fn,
+                              sampler=ImbalancedDatasetSampler(trainset),
                               num_workers=num_workers,
                               pin_memory=pin_memory)
 
