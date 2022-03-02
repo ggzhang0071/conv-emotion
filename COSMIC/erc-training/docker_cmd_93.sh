@@ -5,7 +5,7 @@ img="nvcr.io/nvidia/pytorch:19.01-py3"
 
 
 docker run --gpus all  --privileged=true   --workdir /git --name "cosmic"  -e DISPLAY --ipc=host -d --rm  -p 6610:4452  \
--v /raid/git/conv-emotion:/git/conv-emotion \
+-v /raid/git/conv-emotion/COSMIC/:/git/COSMIC \
  -v /raid/git/datasets:/git/datasets \
  $img sleep infinity
 

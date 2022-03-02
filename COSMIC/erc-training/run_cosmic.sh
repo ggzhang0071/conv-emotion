@@ -6,5 +6,6 @@ rm  Logs/*
 
 python  MPSOGSA_GRU.py  2>&1 |tee Logs/$timestamp.log  
 
+timestamp=`date +%Y%m%d%H%M%S`
 
 nohup python train_iemocap.py --active-listener   2>&1 |tee Logs/$timestamp.log  

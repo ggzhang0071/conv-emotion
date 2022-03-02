@@ -1,3 +1,10 @@
+<<<<<<< HEAD
 pandas>=0.23.3
 numpy>=1.15.4
 scikit_learn>=0.20.0
+=======
+pandas==0.23.3
+torch==1.0
+numpy==1.15.0
+scikit_learn==0.20.0
+>>>>>>> 9dd695f771be52978ce1bc853c70a651e06f273d
