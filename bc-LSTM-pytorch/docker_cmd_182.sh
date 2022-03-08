@@ -1,4 +1,6 @@
-img="nvcr.io/nvidia/pytorch:19.01-py3"
+#img="nvcr.io/nvidia/pytorch:19.01-py3"
+img="nvcr.io/nvidia/pytorch:20.12-py3"
+
 #nvcr.io/nvidia/pytorch:18.01-py3
 
 
@@ -7,9 +9,9 @@ docker run --gpus all  --privileged=true   --workdir /git --name "bclstm"  -e DI
  -v  /raid/git/datasets:/git/datasets \
  $img sleep infinity
 
-
 docker exec -it bclstm   /bin/bash
-
 
 #pip install -r COSMIC/requirements.txt
 #docker images |grep pytorch  | grep  "19"
+
+#docker stop bclstm

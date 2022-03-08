@@ -48,7 +48,9 @@ def run(x_train, y_train, model):
 
 if __name__ == '__main__':
      RECEIVED_PARAMS = nni.get_next_parameter()
+     print(RECEIVED_PARAMS)
      PARAMS = get_default_parameters()
      PARAMS.update(RECEIVED_PARAMS)
+
      model = get_model(PARAMS)
      run(x_train, y_train, model)
