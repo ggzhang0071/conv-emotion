@@ -11,12 +11,7 @@ from model import LSTMModel, MaskedNLLLoss
 from dataloader import IEMOCAPDataset
 import nni
 
-def get_default_parameters():
-     params = {
-          'batch_size':32,
-          'lr': 0.02
-     }
-     return params
+
 
 def get_train_valid_sampler(trainset, valid=0.1):
     size = len(trainset)
@@ -117,6 +112,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     print(args)
+    args_dict=vars(args)
+    RECEIVED_PARAMS = nni.get_next_parameter()
+    args_dict.update(RECEIVED_PARAMS)
+    args = argparse.Namespace(**args_dict)
 
     args.cuda = torch.cuda.is_available() and not args.no_cuda
     if args.cuda:
@@ -127,19 +126,11 @@ if __name__ == '__main__':
     if args.tensorboard:
         from tensorboardX import SummaryWriter
         writer = SummaryWriter()
-    #  add nni parameters update
-    RECEIVED_PARAMS = nni.get_next_parameter()
-    PARAMS = get_default_parameters()
-    PARAMS.update(RECEIVED_PARAMS)
+  
 
-    batch_size =  PARAMS.get("batch_size")
-    lr= PARAMS.get("lr")
+    batch_size = args.batch_size
     cuda       = args.cuda
     n_epochs   = args.epochs
-
-    """batch_size = args.batch_size
-    cuda       = args.cuda
-    n_epochs   = args.epochs"""
     
     n_classes  = 6
     D_m = 100

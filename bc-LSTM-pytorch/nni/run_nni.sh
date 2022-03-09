@@ -1,3 +1,4 @@
-nnictl create --config  config.yml  --port 2331
+nnictl create --config  config.yml  --port 4452
+
 
 
