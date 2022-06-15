@@ -1,3 +1,5 @@
 
+pip install --ignore-installed PyYAML
+
 nni==2.6.1
 #pip install https://github.com/ufoym/imbalanced-dataset-sampler/archive/master.zip
