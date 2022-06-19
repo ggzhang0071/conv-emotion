@@ -205,10 +205,10 @@ class BiModel(nn.Module):
         self.n_classes = n_classes
         self.dropout   = nn.Dropout(dropout)
         self.dropout_rec = nn.Dropout(dropout+0.15)
-        self.dialog_rnn_f = DialogueRNN(D_m, D_g, D_p, D_e,listener_state,
-                                    context_attention, D_a, dropout_rec)
-        self.dialog_rnn_r = DialogueRNN(D_m, D_g, D_p, D_e,listener_state,
-                                    context_attention, D_a, dropout_rec)
+        self.dialog_rnn_f = DialogueRNN(D_m, D_g, D_p, D_e,listener_state,context_attention, D_a, dropout_rec)
+        self.dialog_rnn_r = DialogueRNN(D_m, D_g, D_p, D_e,listener_state,context_attention, D_a, dropout_rec)
+
+
         self.linear     = nn.Linear(2*D_e, 2*D_h)
         self.smax_fc    = nn.Linear(2*D_h, n_classes)
         self.matchatt = MatchingAttention(2*D_e,2*D_e,att_type='general2')
@@ -689,4 +689,27 @@ class UnMaskedWeightedNLLLoss(nn.Module):
             loss = self.loss(pred, target)\
                             /torch.sum(self.weight[target])
         return loss
+
+if __name__ == '__main__':
+    D_m = 100
+    D_g = 150
+    D_p = 150
+    D_e = 100
+    t = 5
+    batch_size = 23
+    num_party = 2
+    model = DialogueRNNCell(D_m,D_g,D_p,D_e)
+    U = torch.randn([batch_size,D_m])
+    qmask = torch.ones([batch_size,num_party])
+    g_hist = torch.randn([t-1,batch_size,D_g])
+    #  Last time step personnel status 
+    q0 = torch.randn([batch_size,num_party,D_p])
+    #  The last time step shows emotion 
+    e0 = torch.randn([batch_size,D_e])
+    g_,q_,e_,alpha = model(U,qmask,g_hist,q0,e0)
+    print('g_:',g_.shape)
+    print('q_:',q_.shape)
+    print('e_:',e_.shape)
+    print('alpha:',alpha.shape)
+    
 
