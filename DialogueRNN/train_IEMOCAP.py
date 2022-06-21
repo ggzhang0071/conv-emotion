@@ -222,6 +222,7 @@ if __name__ == '__main__':
     #     pickle.dump(best_attn+[best_label,best_pred,best_mask],f)
     save_results=[{"best_loss":best_loss}, {"accuracy":best_acc},{"hyperparameters":args.model_parameters}]
 
+    os.makedi
     with open("results/dialoguernn_iemocap_results.txt", 'a') as rf:
         rf.write("best_loss:{}, best_acc:{}, parameter:{}".format(best_loss,best_acc,args))
         rf.write("\r\n")
