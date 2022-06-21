@@ -4,7 +4,7 @@ img="nvcr.io/nvidia/pytorch:19.03-py3"
 
 
 
-docker run   --privileged=true   --workdir /git --name "dialoguernn"  -e DISPLAY --ipc=host -d --rm  -p 6611:4452  \
+docker run --gpus all   --privileged=true   --workdir /git --name "dialoguernn"  -e DISPLAY --ipc=host -d --rm  -p 6611:4452  \
 -v /home/zgg/conv-emotion/DialogueRNN:/git/DialogueRNN \
  -v /home/zgg/datasets:/git/datasets \
  $img sleep infinity

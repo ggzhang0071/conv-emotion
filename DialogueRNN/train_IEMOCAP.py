@@ -19,6 +19,10 @@ from dataloader import IEMOCAPDataset
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] ="1,0"
 
+torch.cuda.is_available()
+
+
+
 def get_train_valid_sampler(trainset, valid=0.1):
     size = len(trainset)
     idx = list(range(size))
@@ -222,8 +226,9 @@ if __name__ == '__main__':
     #     pickle.dump(best_attn+[best_label,best_pred,best_mask],f)
     save_results=[{"best_loss":best_loss}, {"accuracy":best_acc},{"hyperparameters":args.model_parameters}]
 
-    os.makedi
-    with open("results/dialoguernn_iemocap_results.txt", 'a') as rf:
+    save_results="results/dialoguernn_iemocap_results.txt"
+    os.makedirs(save_results,exist_ok=True)
+    with open(save_results, 'a') as rf:
         rf.write("best_loss:{}, best_acc:{}, parameter:{}".format(best_loss,best_acc,args))
         rf.write("\r\n")
 
