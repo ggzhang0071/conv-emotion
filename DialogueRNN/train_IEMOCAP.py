@@ -227,7 +227,7 @@ if __name__ == '__main__':
     save_results=[{"best_loss":best_loss}, {"accuracy":best_acc},{"hyperparameters":args.model_parameters}]
 
     save_results="results/dialoguernn_iemocap_results.txt"
-    os.makedirs(save_results,exist_ok=True)
+    os.makedirs(os.path.dirname(save_results), exist_ok=True)
     with open(save_results, 'a') as rf:
         rf.write("best_loss:{}, best_acc:{}, parameter:{}".format(best_loss,best_acc,args))
         rf.write("\r\n")
