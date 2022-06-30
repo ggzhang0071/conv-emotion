@@ -4,13 +4,13 @@ import torch.nn.functional as F
 from torch.nn.utils.rnn import pad_sequence
 
 class SimpleAttention(nn.Module):
-
     def __init__(self, input_dim):
         super(SimpleAttention, self).__init__()
         self.input_dim = input_dim
         self.scalar = nn.Linear(self.input_dim,1,bias=False)
 
     def forward(self, M, x=None):
+        # what is this means?
         """
         M -> (seq_len, batch, vector)
         x -> dummy argument for the compatibility with MatchingAttention
@@ -22,6 +22,8 @@ class SimpleAttention(nn.Module):
         return attn_pool, alpha
 
 class MatchingAttention(nn.Module):
+    # what is the role of MatchingAttention
+    # wha is the x means
 
     def __init__(self, mem_dim, cand_dim, alpha_dim=None, att_type='general'):
         super(MatchingAttention, self).__init__()
@@ -30,6 +32,7 @@ class MatchingAttention(nn.Module):
         self.mem_dim = mem_dim
         self.cand_dim = cand_dim
         self.att_type = att_type
+        # this transform is used for utterances transforms
         if att_type=='general':
             self.transform = nn.Linear(cand_dim, mem_dim, bias=False)
         if att_type=='general2':
@@ -41,9 +44,12 @@ class MatchingAttention(nn.Module):
 
     def forward(self, M, x, mask=None):
         """
-        M -> (seq_len, batch, mem_dim)
-        x -> (batch, cand_dim)
+        this module is used for speaker update
+        M -> (seq_len, batch, mem_dim) M is the time sequence hidden state
+        x -> (batch, cand_dim) x is  the utterances 
         mask -> (batch, seq_len)
+        attn_pool is the context 
+        alpha is the coefficient of hidden state importance
         """
         if type(mask)==type(None):
             mask = torch.ones(M.size(1), M.size(0)).type(M.type())
@@ -73,6 +79,7 @@ class MatchingAttention(nn.Module):
             alpha = F.softmax(self.vector_prod(mx_a),1).transpose(1,2) # batch, 1, seqlen
 
         attn_pool = torch.bmm(alpha, M.transpose(0,1))[:,0,:] # batch, mem_dim
+
 
         return attn_pool, alpha
 
@@ -115,8 +122,11 @@ class DialogueRNNCell(nn.Module):
         qmask -> batch, party
         g_hist -> t-1, batch, D_g
         q0 -> batch, party, D_p
-        e0 -> batch, self.D_e
+        e0 -> batch, self.D_e   e0 is the emotion state
+        what is the q_ me
         """
+        # what is the qmask 
+        # what is the select party means
         qm_idx = torch.argmax(qmask, 1)
         q0_sel = self._select_parties(q0, qm_idx)
 
@@ -131,12 +141,15 @@ class DialogueRNNCell(nn.Module):
             c_, alpha = self.attention(g_hist,U)
         # c_ = torch.zeros(U.size()[0],self.D_g).type(U.type()) if g_hist.size()[0]==0\
         #         else self.attention(g_hist,U)[0] # batch, D_g
+        # qs_ is the speaker state,  
         U_c_ = torch.cat([U,c_], dim=1).unsqueeze(1).expand(-1,qmask.size()[1],-1)
-        qs_ = self.p_cell(U_c_.contiguous().view(-1,self.D_m+self.D_g),
-                q0.view(-1, self.D_p)).view(U.size()[0],-1,self.D_p)
+        qs_ = self.p_cell(U_c_.contiguous().view(-1,self.D_m+self.D_g),q0.view(-1, self.D_p)).view(U.size()[0],-1,self.D_p)
         qs_ = self.dropout(qs_)
 
         if self.listener_state:
+            # ss_ is the context of listener
+            # U_ is not the paper menitoned visual information, but the text of the speaker 
+            # q0 and ql is the listener state
             U_ = U.unsqueeze(1).expand(-1,qmask.size()[1],-1).contiguous().view(-1,self.D_m)
             ss_ = self._select_parties(qs_, qm_idx).unsqueeze(1).\
                     expand(-1,qmask.size()[1],-1).contiguous().view(-1,self.D_p)
@@ -223,6 +236,7 @@ class BiModel(nn.Module):
 
         xfs = []
         for x, c in zip(X_, mask_sum):
+            #why mask_sum is used here?
             xf = torch.flip(x[:c], [0])
             xfs.append(xf)
 
@@ -233,6 +247,7 @@ class BiModel(nn.Module):
         """
         U -> seq_len, batch, D_m
         qmask -> seq_len, batch, party
+        what is the  qmask and umask
         """
 
         emotions_f, alpha_f = self.dialog_rnn_f(U, qmask) # seq_len, batch, D_e
@@ -691,25 +706,40 @@ class UnMaskedWeightedNLLLoss(nn.Module):
         return loss
 
 if __name__ == '__main__':
-    D_m = 100
-    D_g = 150
-    D_p = 150
-    D_e = 100
-    t = 5
-    batch_size = 23
-    num_party = 2
-    model = DialogueRNNCell(D_m,D_g,D_p,D_e)
-    U = torch.randn([batch_size,D_m])
-    qmask = torch.ones([batch_size,num_party])
-    g_hist = torch.randn([t-1,batch_size,D_g])
-    #  Last time step personnel status 
-    q0 = torch.randn([batch_size,num_party,D_p])
-    #  The last time step shows emotion 
-    e0 = torch.randn([batch_size,D_e])
-    g_,q_,e_,alpha = model(U,qmask,g_hist,q0,e0)
-    print('g_:',g_.shape)
-    print('q_:',q_.shape)
-    print('e_:',e_.shape)
-    print('alpha:',alpha.shape)
-    
+    test_module="MatchingAttention"
+
+    if test_module=="DialogueRNNCell":
+        D_m = 100
+        D_g = 150
+        D_p = 150
+        D_e = 100
+        t = 5
+        batch_size = 23
+        num_party = 2
+        model = DialogueRNNCell(D_m,D_g,D_p,D_e)
+        U = torch.randn([batch_size,D_m])
+        qmask = torch.ones([batch_size,num_party])
+        g_hist = torch.randn([t-1,batch_size,D_g])
+        #  Last time step personnel status 
+        q0 = torch.randn([batch_size,num_party,D_p])
+        #  The last time step shows emotion 
+        e0 = torch.randn([batch_size,D_e])
+        g_,q_,e_,alpha = model(U,qmask,g_hist,q0,e0)
+        print('g_:',g_.shape)
+        print('q_:',q_.shape)
+        print('e_:',e_.shape)
+        print('alpha:',alpha.shape)
+    elif test_module=="MatchingAttention":
+        mem_dim = 100
+        cand_dim = 150
+        attn = MatchingAttention(mem_dim,cand_dim) 
+        # t-1:5
+        t_1 = 5
+        batch_size = 8
+
+        M = torch.randn([t_1,batch_size,mem_dim])
+        x = torch.randn([batch_size,cand_dim])
+        attn_pool,alpha = attn(M,x)
+        print('attn_pool:',attn_pool.shape)
+        print('alpha:',alpha.shape)
 
